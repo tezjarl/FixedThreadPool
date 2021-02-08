@@ -1,7 +1,6 @@
-using System.Reflection.Metadata;
+using System.Threading;
 using FixedThreadPool;
 using Moq;
-using Moq.Sequences;
 using NUnit.Framework;
 
 namespace Tests
@@ -15,37 +14,78 @@ namespace Tests
 		[Test]
 		public void FixedThreadPool_StopEmptyPool_CannotAddNewTaskAfterStop()
 		{
-			Assert.Pass();
+			var pool = new FixedThreadPool.FixedThreadPool(1);
+			var lowTask = new Mock<ILowPriorityTask>();
+			
+			pool.Stop();
+			var taskAddToQueue = pool.Execute(lowTask.Object, Priority.LOW);
+			
+			Assert.AreEqual(false,taskAddToQueue);
 		}
 		
 		[Test]
 		public void FixedThreadPool_StopPoolWithTask_WaitForTaskIsFinished()
 		{
-			Assert.Pass();
+			var pool = new FixedThreadPool.FixedThreadPool(1);
+			var lowTask = new Mock<ILowPriorityTask>();
+
+			pool.Execute(lowTask.Object, Priority.LOW);
+			Thread.Sleep(100);
+			
+			lowTask.Verify(l=>l.Execute(), Times.Once);
 		}
 		
 		[Test]
-		public void FixedThreadPool_AddOneLowPriorityTask_ExecutedCorrectly()
+		public void FixedThreadPool_AddOneTask_SuccesfullyAdded()
 		{
-			Assert.Pass();
+			var pool = new FixedThreadPool.FixedThreadPool(1);
+			var lowTask = new Mock<ILowPriorityTask>();
+
+			var taskAddToQueue = pool.Execute(lowTask.Object, Priority.LOW);
+			
+			Assert.AreEqual(true,taskAddToQueue);
 		}
 		
 		[Test]
 		public void FixedThreadPool_AddLowAndNormalPrioritiesTasks_LowExecutedAfterNormal()
 		{
-			Assert.Pass();
+			var pool = new FixedThreadPool.FixedThreadPool(1);
+			var lowTask = new Mock<ILowPriorityTask>(MockBehavior.Strict);
+			var normalTask = new Mock<INormalPriorityTask>(MockBehavior.Strict);
+			var sequence = new MockSequence();
+			
+			normalTask.InSequence(sequence).Setup(n => n.Execute());
+			lowTask.InSequence(sequence).Setup(l => l.Execute());
+			
+			pool.Execute(lowTask.Object, Priority.LOW);
+			pool.Execute(normalTask.Object, Priority.NORMAL);
+			Thread.Sleep(100);
+
+			lowTask.Verify(l=>l.Execute(), Times.Once);
+			normalTask.Verify(n=>n.Execute(), Times.Once);
 		}
 		
 		[Test]
 		public void FixedThreadPool_AddHighNormalAndLowPrioritiesTasks_ExecutedInCorrectOrder()
 		{
-			Assert.Pass();
-		}
-		
-		[Test]
-		public void FixedThreadPool_AddSixHighAndTwoLowPrioritiesTasks_ExecutedInCorrectOrder()
-		{
-			Assert.Pass();
+			var pool = new FixedThreadPool.FixedThreadPool(1);
+			var lowTask = new Mock<ILowPriorityTask>(MockBehavior.Strict);
+			var normalTask = new Mock<INormalPriorityTask>(MockBehavior.Strict);
+			var highTask = new Mock<IHighPriorityTask>(MockBehavior.Strict);
+			var sequence = new MockSequence();
+
+			highTask.InSequence(sequence).Setup(h => h.Execute());
+			normalTask.InSequence(sequence).Setup(n => n.Execute());
+			lowTask.InSequence(sequence).Setup(l => l.Execute());
+			
+			pool.Execute(lowTask.Object, Priority.LOW);
+			pool.Execute(highTask.Object, Priority.HIGH);
+			pool.Execute(normalTask.Object, Priority.NORMAL);
+			Thread.Sleep(100);
+
+			lowTask.Verify(l=>l.Execute(), Times.Once);
+			normalTask.Verify(n=>n.Execute(), Times.Once);
+			highTask.Verify(h=>h.Execute(), Times.Once);
 		}
 	}
 }

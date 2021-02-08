@@ -16,7 +16,7 @@ namespace FixedThreadPool
 		private readonly ConcurrentQueue<ITask> _highPriorityTasks = new ConcurrentQueue<ITask>();
 		private readonly ConcurrentQueue<ITask> _normalPriorityTasks = new ConcurrentQueue<ITask>();
 		private readonly ConcurrentQueue<ITask> _lowPriorityTasks = new ConcurrentQueue<ITask>();
-		private readonly TimeSpan _spinTimeout = TimeSpan.FromMilliseconds(100);
+		private readonly TimeSpan _spinTimeout = TimeSpan.FromMilliseconds(5);
 		private readonly TimeSpan _finishTasksTimeout = TimeSpan.FromSeconds(20);
 		private const int HighTaskRatio = 3;
 		private const int NormalTaskRatio = 1;
@@ -137,7 +137,7 @@ namespace FixedThreadPool
 			}
 		}
 
-		private bool IsWorkCapacityReached() => _executingTasks.Count >= _workCount;
+		private bool IsWorkCapacityReached() => _executingTasks.Count > _workCount;
 
 		private bool AreThereScheduledTasks() => _highPriorityTasks.Any() || _normalPriorityTasks.Any() || _lowPriorityTasks.Any();
 
