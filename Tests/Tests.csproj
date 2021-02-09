@@ -8,7 +8,6 @@
 
     <ItemGroup>
         <PackageReference Include="Moq" Version="4.16.0" />
-        <PackageReference Include="Moq.Sequences" Version="2.2.1" />
         <PackageReference Include="NUnit" Version="3.12.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
