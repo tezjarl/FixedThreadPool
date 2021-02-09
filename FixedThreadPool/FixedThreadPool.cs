@@ -20,6 +20,7 @@ namespace FixedThreadPool
 		private readonly TimeSpan _finishTasksTimeout = TimeSpan.FromSeconds(20);
 		private const int HighTaskRatio = 3;
 		private const int NormalTaskRatio = 1;
+
 		/// <summary>
 		/// Конструктор
 		/// </summary>
@@ -36,6 +37,7 @@ namespace FixedThreadPool
 			var cancellationToken = _cancellationTokenSource.Token;
 			Task.Run(async () => await ScheduleTaskAsync(cancellationToken), cancellationToken);
 		}
+
 		/// <summary>
 		/// Ставит задачу на выполнение с указанным приоритетом
 		/// </summary>
@@ -68,7 +70,7 @@ namespace FixedThreadPool
 					_lowPriorityTasks.Enqueue(task);
 					break;
 				default:
-					throw new ArgumentException("Указаное значение приоритета не поддерживается",nameof(priority));
+					throw new ArgumentException("Указаное значение приоритета не поддерживается", nameof(priority));
 			}
 
 			return true;
@@ -83,40 +85,40 @@ namespace FixedThreadPool
 
 		private async Task ScheduleTaskAsync(CancellationToken cancellationToken)
 		{
-			var executedHighTaskCount = 0;
-			var normalTasksToExecute = 0;
+			var executedHighPriorityTaskCount = 0;
+			var normalPriorityTasksToExecute = 0;
 
 			while (!cancellationToken.IsCancellationRequested)
 			{
 				if (AreThereScheduledTasks() &&
 				    !IsWorkCapacityReached())
 				{
-					var isExecutionOfNormalTaskAllowed =
-						executedHighTaskCount >= HighTaskRatio && normalTasksToExecute < NormalTaskRatio;
+					var isExecutionOfNormalPriorityTaskAllowed =
+						executedHighPriorityTaskCount >= HighTaskRatio && normalPriorityTasksToExecute < NormalTaskRatio;
 
 					if (_highPriorityTasks.Any())
 					{
-						var couldHighTaskBeExecuted = !_normalPriorityTasks.Any() || !isExecutionOfNormalTaskAllowed;
-						if (couldHighTaskBeExecuted &&
+						var couldHighPriorityTaskBeExecuted = !_normalPriorityTasks.Any() || !isExecutionOfNormalPriorityTaskAllowed;
+						if (couldHighPriorityTaskBeExecuted &&
 						    TryExecuteTaskFromQueue(_highPriorityTasks))
 						{
-							executedHighTaskCount++;
+							executedHighPriorityTaskCount++;
 							continue;
 						}
 					}
 
 					if (_normalPriorityTasks.Any())
 					{
-						var couldNormalTaskBeExecuted = !_highPriorityTasks.Any() || isExecutionOfNormalTaskAllowed;
-						if (couldNormalTaskBeExecuted &&
+						var couldNormalPriorityTaskBeExecuted = !_highPriorityTasks.Any() || isExecutionOfNormalPriorityTaskAllowed;
+						if (couldNormalPriorityTaskBeExecuted &&
 						    TryExecuteTaskFromQueue(_normalPriorityTasks))
 						{
-							normalTasksToExecute++;
+							normalPriorityTasksToExecute++;
 						}
 
-						if (normalTasksToExecute >= NormalTaskRatio)
+						if (normalPriorityTasksToExecute >= NormalTaskRatio)
 						{
-							executedHighTaskCount = 0;
+							executedHighPriorityTaskCount = 0;
 						}
 
 						continue;
@@ -124,8 +126,8 @@ namespace FixedThreadPool
 
 					if (_lowPriorityTasks.Any())
 					{
-						var couldLowTaskBeExecuted = !_highPriorityTasks.Any() && !_normalPriorityTasks.Any();
-						if (couldLowTaskBeExecuted)
+						var couldLowPriorityTaskBeExecuted = !_highPriorityTasks.Any() && !_normalPriorityTasks.Any();
+						if (couldLowPriorityTaskBeExecuted)
 						{
 							TryExecuteTaskFromQueue(_lowPriorityTasks);
 						}
@@ -140,7 +142,8 @@ namespace FixedThreadPool
 
 		private bool IsWorkCapacityReached() => _executingTasks.Count > _workCount;
 
-		private bool AreThereScheduledTasks() => _highPriorityTasks.Any() || _normalPriorityTasks.Any() || _lowPriorityTasks.Any();
+		private bool AreThereScheduledTasks() =>
+			_highPriorityTasks.Any() || _normalPriorityTasks.Any() || _lowPriorityTasks.Any();
 
 		private bool TryExecuteTaskFromQueue(ConcurrentQueue<ITask> queue)
 		{
@@ -161,7 +164,5 @@ namespace FixedThreadPool
 				_executingTasks.TryRemove(task, out _);
 			}
 		}
-
-
 	}
 }
