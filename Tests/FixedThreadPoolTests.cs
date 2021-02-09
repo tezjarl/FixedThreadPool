@@ -105,6 +105,25 @@ namespace Tests
 			
 			Assert.That(RecordingMock.Calls.ToArray(), Is.EqualTo(expectedExecutionOrder));
 		}
+		
+		[Test]
+		public void FixedThreadPool_SetWorkerCountLowerThanTaskAmount_ExecutedCorrectly()
+		{
+			var pool = new FixedThreadPool.FixedThreadPool(1);
+			var lowTask = new Mock<ILowPriorityTask>(MockBehavior.Strict);
+			var normalTask = new Mock<INormalPriorityTask>(MockBehavior.Strict);
+			var sequence = new MockSequence();
+			
+			lowTask.InSequence(sequence).Setup(l => l.Execute());
+			normalTask.InSequence(sequence).Setup(n => n.Execute());
+
+			pool.Execute(lowTask.Object, Priority.LOW);
+			pool.Execute(normalTask.Object, Priority.NORMAL);
+			Thread.Sleep(100);
+
+			lowTask.Verify(l=>l.Execute(), Times.Once);
+			normalTask.Verify(n=>n.Execute(), Times.Once);
+		}
 
 		[TearDown]
 		public void TearDown()
