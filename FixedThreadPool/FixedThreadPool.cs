@@ -34,7 +34,7 @@ namespace FixedThreadPool
 
 			_workCount = workCount;
 			var cancellationToken = _cancellationTokenSource.Token;
-			Task.Run(() => ScheduleTaskAsync(cancellationToken), cancellationToken);
+			Task.Run(async () => await ScheduleTaskAsync(cancellationToken), cancellationToken);
 		}
 		/// <summary>
 		/// Ставит задачу на выполнение с указанным приоритетом
