@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading;
 using FixedThreadPool;
 
 namespace Tests
@@ -14,6 +15,7 @@ namespace Tests
 		}
 		public void Execute()
 		{
+			//Thread.Sleep(30);
 			Calls.Enqueue(_priority);
 		}
 	}

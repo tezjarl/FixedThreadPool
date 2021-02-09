@@ -20,17 +20,18 @@ namespace Tests
 			pool.Stop();
 			var taskAddToQueue = pool.Execute(lowTask.Object, Priority.LOW);
 			
-			Assert.AreEqual(false,taskAddToQueue);
+			Assert.That(taskAddToQueue, Is.False);
 		}
 		
 		[Test]
-		public void FixedThreadPool_StopPoolWithTask_WaitForTaskIsFinished()
+		public void FixedThreadPool_StopPoolWithExecutingTask_WaitForTaskIsFinished()
 		{
 			var pool = new FixedThreadPool.FixedThreadPool(1);
 			var lowTask = new Mock<ILowPriorityTask>();
 
 			pool.Execute(lowTask.Object, Priority.LOW);
 			Thread.Sleep(100);
+			pool.Stop();
 			
 			lowTask.Verify(l=>l.Execute(), Times.Once);
 		}
@@ -43,7 +44,7 @@ namespace Tests
 
 			var taskAddToQueue = pool.Execute(lowTask.Object, Priority.LOW);
 			
-			Assert.AreEqual(true,taskAddToQueue);
+			Assert.That(taskAddToQueue, Is.True);
 		}
 		
 		[Test]

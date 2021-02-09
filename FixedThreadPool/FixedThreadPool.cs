@@ -93,7 +93,7 @@ namespace FixedThreadPool
 				{
 					var isExecutionOfNormalTaskAllowed =
 						executedHighTaskCount >= HighTaskRatio && normalTasksToExecute < NormalTaskRatio;
-					
+
 					if (_highPriorityTasks.Any())
 					{
 						var couldHighTaskBeExecuted = !_normalPriorityTasks.Any() || !isExecutionOfNormalTaskAllowed;
@@ -107,7 +107,7 @@ namespace FixedThreadPool
 
 					if (_normalPriorityTasks.Any())
 					{
-						var couldNormalTaskBeExecuted = !_highPriorityTasks.Any() || isExecutionOfNormalTaskAllowed; 
+						var couldNormalTaskBeExecuted = !_highPriorityTasks.Any() || isExecutionOfNormalTaskAllowed;
 						if (couldNormalTaskBeExecuted &&
 						    TryExecuteTaskFromQueue(_normalPriorityTasks))
 						{
@@ -118,16 +118,17 @@ namespace FixedThreadPool
 						{
 							executedHighTaskCount = 0;
 						}
+
 						continue;
 					}
+
 					if (_lowPriorityTasks.Any())
 					{
 						var couldLowTaskBeExecuted = !_highPriorityTasks.Any() && !_normalPriorityTasks.Any();
 						if (couldLowTaskBeExecuted)
 						{
-							TryExecuteTaskFromQueue(_lowPriorityTasks);	
+							TryExecuteTaskFromQueue(_lowPriorityTasks);
 						}
-						
 					}
 				}
 				else
@@ -145,22 +146,22 @@ namespace FixedThreadPool
 		{
 			if (queue.TryDequeue(out var task))
 			{
-				ExecuteAsync(task).ConfigureAwait(false);
+				ExecuteTask(task);
 				return true;
 			}
 
 			return false;
 		}
 
-		private async Task ExecuteAsync(ITask task)
+		private void ExecuteTask(ITask task)
 		{
 			if (_executingTasks.TryAdd(task, new Task(task.Execute)))
 			{
-				await Task.Run(() => task.Execute());
+				Task.Run(() => task.Execute());
 				_executingTasks.TryRemove(task, out _);
 			}
 		}
-		
-		
+
+
 	}
 }
